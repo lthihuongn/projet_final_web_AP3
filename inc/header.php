@@ -1,0 +1,46 @@
+<?php
+// Démarrage de la session si elle n'est pas déjà active
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
+
+// Sécurité : S'assurer que $dir est défini même si oublié dans la page appelante
+if (!isset($dir)) {
+    $dir = '';
+}
+?>
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Plateforme CV - JUNIA</title>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&family=Open+Sans:wght@400;600&display=swap" rel="stylesheet">
+    
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    
+<!-- Remplacer l'ancienne ligne du CSS par celle-ci : -->
+<link rel="stylesheet" href="<?php echo $dir; ?>css/style.css?v=<?php echo time(); ?>"></head>
+<body>
+
+<header class="topbar">
+		<div class="brand-block">
+			<div class="brand-logo" aria-hidden="true">J</div>
+			<div>
+				<p class="brand-kicker">JUNIA CV</p>
+			</div>
+		</div>
+
+		<nav class="topnav" aria-label="Navigation principale">
+			<a class="is-active" href="./index.php">Accueil</a>
+            <a class="is-active" href="./pages/catalogue.php">Catalogue</a>
+            <a class="is-active" href="./pages/profil.php">Mon profil</a>
+            
+		</nav>
+	</header>
+
+<main class="container my-5 flex-grow-1">
