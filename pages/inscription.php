@@ -28,7 +28,7 @@ $messageType = isset($_GET['type']) && $_GET['type'] === 'success' ? 'success' :
 				</div>
 			<?php endif; ?>
 
-			<form class="auth-form" method="post" action="#" novalidate>
+			<form class="auth-form" id="registerForm" data-endpoint="../api/register.php" novalidate>
 				<div class="field">
 					<label for="firstname">Prénom</label>
 					<input type="text" id="firstname" name="firstname" placeholder="Ton prénom" autocomplete="given-name" required>
@@ -56,6 +56,16 @@ $messageType = isset($_GET['type']) && $_GET['type'] === 'success' ? 'success' :
 
 				<div class="form-row form-row--compact">
 					<a class="tiny" href="connexion.php">Déjà un compte ? Connexion</a>
+				</div>
+
+				<div class="field" style="margin-top: 8px;">
+    				<label class="checkbox" style="align-items: flex-start;">
+        				<input type="checkbox" name="gdpr_consent" required style="margin-top: 4px;">
+        				<span style="font-weight: normal; font-size: 0.85rem; line-height: 1.4;">
+           					 J'accepte que mes données personnelles soient collectées, stockées et affichées aux entreprises partenaires de JUNIA dans le strict cadre de la recherche de stages et d'emplois. 
+            				<a href="rgpd.php" style="color: var(--accent); text-decoration: underline;">En savoir plus</a>.
+        				</span>
+    				</label>
 				</div>
 
 				<button type="submit" class="button">Créer mon compte</button>
