@@ -72,5 +72,6 @@ $messageType = isset($_GET['type']) && $_GET['type'] === 'success' ? 'success' :
 			</form>
 		</section>
 	</main>
+	<script src="../js/auth.js"></script>
 </body>
 </html>
