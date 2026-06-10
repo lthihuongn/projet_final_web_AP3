@@ -1,58 +1,92 @@
 <?php
+// Démarrage de la session
 session_start();
 
+// Définition de l'en-tête pour le retour au format JSON
 header('Content-Type: application/json; charset=UTF-8');
 
-function read_input(): array
+// Inclusion de la connexion à la base de données
+require_once '../inc/db.php';
+
+/**
+ * Envoie une réponse JSON et arrête l'exécution du script
+ */
+function sendJsonResponse(bool $isSuccess, string $message, array $extraData = []): void
 {
-	$raw = file_get_contents('php://input');
-	if ($raw !== false && trim($raw) !== '') {
-		$decoded = json_decode($raw, true);
-		if (is_array($decoded)) {
-			return $decoded;
-		}
-	}
-
-	return $_POST;
+    echo json_encode(array_merge([
+        'success' => $isSuccess,
+        'message' => $message,
+    ], $extraData), JSON_UNESCAPED_UNICODE);
+    exit;
 }
 
-function respond(bool $success, string $message, array $extra = []): void
+/**
+ * Lit les données reçues (format JSON ou POST classique)
+ */
+function getRequestPayload(): array
 {
-	echo json_encode(array_merge([
-		'success' => $success,
-		'message' => $message,
-	], $extra), JSON_UNESCAPED_UNICODE);
-	exit;
+    $rawInput = file_get_contents('php://input');
+    if ($rawInput !== false && trim($rawInput) !== '') {
+        $decodedJson = json_decode($rawInput, true);
+        if (is_array($decodedJson)) {
+            return $decodedJson;
+        }
+    }
+    return $_POST;
 }
 
-if (!isset($_SESSION['user'])) {
-	respond(false, 'Accès non autorisé.');
+// Vérification de l'authentification et du rôle : seul un profil "entreprise" peut convoquer
+if (!isset($_SESSION['user']) || $_SESSION['user']['role'] !== 'company') {
+    sendJsonResponse(false, 'Accès non autorisé. Vous devez être connecté en tant qu\'entreprise pour envoyer une convocation.');
 }
 
+// Vérification de la méthode HTTP
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-	respond(false, 'Méthode non autorisée.');
+    sendJsonResponse(false, 'Méthode HTTP non autorisée. Une requête POST est attendue.');
 }
 
-$payload = read_input();
-$profileId = (int) ($payload['profileId'] ?? 0);
-$date = trim((string) ($payload['date'] ?? ''));
-$message = trim((string) ($payload['message'] ?? ''));
+// Extraction des données envoyées par l'interface (catalogue.js)
+$payload = getRequestPayload();
+$studentId = (int) ($payload['profileId'] ?? 0);
+$interviewDate = trim((string) ($payload['date'] ?? ''));
+$interviewMessage = trim((string) ($payload['message'] ?? ''));
 
-if ($profileId <= 0 || $date === '') {
-	respond(false, 'Merci de renseigner un profil et une date de convocation.');
+// Vérification des champs obligatoires
+if ($studentId <= 0 || $interviewDate === '') {
+    sendJsonResponse(false, 'Merci de sélectionner un profil étudiant et de renseigner une date d\'entretien.');
 }
 
-$history = $_SESSION['conversations'] ?? [];
-$history[] = [
-	'profileId' => $profileId,
-	'date' => $date,
-	'message' => $message,
-	'createdAt' => date('c'),
-	'company' => $_SESSION['user']['name'] ?? 'Entreprise',
-];
+try {
+    // Récupération de l'ID de l'entreprise depuis la session active
+    $companyId = (int) $_SESSION['user']['id'];
 
-$_SESSION['conversations'] = $history;
+    // 1. Vérification de l'existence de l'étudiant dans la base de données
+    $checkStudentQuery = $pdo->prepare('SELECT id FROM etudiants WHERE id = :student_id');
+    $checkStudentQuery->execute(['student_id' => $studentId]);
+    
+    if (!$checkStudentQuery->fetch()) {
+        sendJsonResponse(false, 'Le profil étudiant sélectionné n\'existe pas ou a été supprimé.');
+    }
 
-respond(true, 'Convocation enregistrée. Un courriel pourra être déclenché côté serveur si PHPMailer est configuré.', [
-	'historyCount' => count($history),
-]);
+    // 2. Préparation de la requête d'insertion dans la table 'convocations'
+    $insertInterviewQuery = $pdo->prepare('
+        INSERT INTO convocations (etudiant_id, entreprise_id, message, date_convocation, statut) 
+        VALUES (:student_id, :company_id, :message, :interview_date, :status)
+    ');
+    
+    // 3. Exécution de la requête avec liaison sécurisée des paramètres
+    $insertInterviewQuery->execute([
+        'student_id' => $studentId,
+        'company_id' => $companyId,
+        'message' => $interviewMessage !== '' ? $interviewMessage : null,
+        'interview_date' => $interviewDate,
+        'status' => 'en attente'
+    ]);
+
+    // Envoi de la réponse de succès au front-end
+    sendJsonResponse(true, 'La convocation a été envoyée et enregistrée avec succès dans la base de données.');
+
+} catch (Exception $exception) {
+    // Gestion des erreurs SQL
+    sendJsonResponse(false, 'Erreur système lors de l\'enregistrement de la convocation : ' . $exception->getMessage());
+}

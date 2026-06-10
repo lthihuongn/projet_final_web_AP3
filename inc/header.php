@@ -36,11 +36,25 @@ if (!isset($dir)) {
 		</div>
 
 		<nav class="topnav" aria-label="Navigation principale">
-			<a class="is-active" href="./index.php">Accueil</a>
-            <a class="is-active" href="./pages/catalogue.php">Catalogue</a>
-            <a class="is-active" href="./pages/profil.php">Mon profil</a>
-            
+			<a href="<?php echo $dir; ?>index.php">Accueil</a>
+			
+			<?php if (isset($_SESSION['user'])): ?>
+				<?php if ($_SESSION['user']['role'] === 'student'): ?>
+					<a href="<?php echo $dir; ?>pages/profil.php">Mon profil</a>
+					<a href="<?php echo $dir; ?>pages/catalogue.php">Catalogue</a>
+				<?php elseif ($_SESSION['user']['role'] === 'company'): ?>
+					<a href="<?php echo $dir; ?>pages/catalogue.php">Catalogue</a>
+				<?php elseif ($_SESSION['user']['role'] === 'admin'): ?>
+					<a href="<?php echo $dir; ?>pages/admin.php">Administration</a>
+					<a href="<?php echo $dir; ?>pages/catalogue.php">Catalogue</a>
+				<?php endif; ?>
+				
+				<a href="<?php echo $dir; ?>api/auth.php?action=logout" style="color: var(--junia-orange);">Déconnexion</a>
+			<?php else: ?>
+				<a href="<?php echo $dir; ?>pages/connexion.php">Connexion</a>
+			<?php endif; ?>
 		</nav>
+
 	</header>
 
 <main class="container my-5 flex-grow-1">

@@ -1,10 +1,11 @@
 <?php
 session_start();
 
-/*if (!isset($_SESSION['user'])) {
-	header('Location: connexion.php?message=Merci+de+vous+connecter+pour+acc%C3%A9der+au+profil.&type=error');
+// Vérification stricte : si l'utilisateur n'est pas connecté ou n'est pas un étudiant, on le renvoie
+if (!isset($_SESSION['user']) || $_SESSION['user']['role'] !== 'student') {
+	header('Location: connexion.php?message=Accès+réservé+aux+profils+étudiants.&type=error');
 	exit;
-}*/
+}
 
 $user = $_SESSION['user'];
 $userName = htmlspecialchars((string) ($user['name'] ?? 'Utilisateur'), ENT_QUOTES, 'UTF-8');
@@ -12,6 +13,8 @@ $userRole = htmlspecialchars((string) ($user['role'] ?? 'student'), ENT_QUOTES, 
 $userEmail = htmlspecialchars((string) ($user['email'] ?? 'prenom.nom@junia.fr'), ENT_QUOTES, 'UTF-8');
 $initials = strtoupper(substr((string) ($user['name'] ?? 'U'), 0, 1));
 ?>
+
+
 <!DOCTYPE html>
 <html lang="fr">
 <head>
@@ -91,7 +94,8 @@ $initials = strtoupper(substr((string) ($user['name'] ?? 'U'), 0, 1));
 			</aside>
 
 			<section class="profil-content">
-				<form class="profil-form" id="profilForm" action="#" method="post">
+				<form class="profil-form" id="profilForm" action="../api/enregistrer-cv.php" method="post">
+					
 					<div class="profil-section">
 						<div class="section-header">
 							<div>
@@ -102,20 +106,12 @@ $initials = strtoupper(substr((string) ($user['name'] ?? 'U'), 0, 1));
 
 						<div class="form-grid form-grid--two">
 							<label class="field">
-								<span>Prénom</span>
-								<input type="text" name="firstname" placeholder="Ton prénom">
-							</label>
-							<label class="field">
-								<span>Nom</span>
-								<input type="text" name="lastname" placeholder="Ton nom">
+								<span>Nom complet</span>
+								<input type="text" name="name" value="<?php echo $userName; ?>" placeholder="Prénom Nom" required>
 							</label>
 							<label class="field">
 								<span>E-mail</span>
-								<input type="email" name="email" value="<?php echo $userEmail; ?>">
-							</label>
-							<label class="field">
-								<span>Téléphone</span>
-								<input type="tel" name="phone" placeholder="06 00 00 00 00">
+								<input type="email" name="email" value="<?php echo $userEmail; ?>" required readonly>
 							</label>
 						</div>
 					</div>
@@ -131,44 +127,59 @@ $initials = strtoupper(substr((string) ($user['name'] ?? 'U'), 0, 1));
 
 					<div class="profil-section">
 						<p class="eyebrow">Parcours</p>
-						<h3>Formation et expériences</h3>
-						<div class="form-grid form-grid--two">
-							<label class="field">
-								<span>École / promotion</span>
-								<input type="text" name="school" placeholder="JUNIA A4 / A5 / Bachelor">
-							</label>
-							<label class="field">
-								<span>Ville</span>
-								<input type="text" name="city" placeholder="Lille, Bordeaux...">
-							</label>
-						</div>
+						<h3>Dernière formation</h3>
 						<div class="form-grid form-grid--three">
 							<label class="field">
-								<span>Expérience 1</span>
-								<input type="text" name="experience_1" placeholder="Stage - entreprise - date">
+								<span>École</span>
+								<input type="text" name="school" placeholder="JUNIA - ISEN / HEI / ISA">
 							</label>
 							<label class="field">
-								<span>Expérience 2</span>
-								<input type="text" name="experience_2" placeholder="Projet, job, alternance...">
+								<span>Diplôme / Spécialisation</span>
+								<input type="text" name="degree" placeholder="CIR, Adimaker, Smart Cities...">
 							</label>
 							<label class="field">
-								<span>Expérience 3</span>
-								<input type="text" name="experience_3" placeholder="Optionnel">
+								<span>Date de fin de formation</span>
+								<input type="date" name="education_end_date">
+							</label>
+						</div>
+					</div>
+
+					<div class="profil-section">
+						<p class="eyebrow">Expérience</p>
+						<h3>Dernière expérience professionnelle</h3>
+						<div class="form-grid form-grid--two">
+							<label class="field">
+								<span>Entreprise</span>
+								<input type="text" name="company" placeholder="Nom de l'entreprise">
+							</label>
+							<label class="field">
+								<span>Poste occupé</span>
+								<input type="text" name="position" placeholder="Ex: Stagiaire développeur">
+							</label>
+							<label class="field">
+								<span>Date de début</span>
+								<input type="date" name="experience_start_date">
+							</label>
+							<label class="field">
+								<span>Date de fin</span>
+								<input type="date" name="experience_end_date">
+							</label>
+						</div>
+						<div class="form-grid style="margin-top: 14px;">
+							<label class="field field--full">
+								<span>Description des missions</span>
+								<textarea name="experience_description" rows="3" placeholder="Détaille tes réalisations et tâches principales..."></textarea>
 							</label>
 						</div>
 					</div>
 
 					<div class="profil-section">
 						<p class="eyebrow">Compétences</p>
-						<h3>Domaines, compétences et langues</h3>
-						<div class="form-grid form-grid--two">
-							<label class="field">
-								<span>Compétences techniques</span>
-								<input type="text" name="skills" placeholder="PHP, MySQL, JavaScript...">
-							</label>
-							<label class="field">
-								<span>Langues</span>
-								<input type="text" name="languages" placeholder="FR, EN, ES...">
+						<h3>Mots-clés et Domaines de recherche</h3>
+						<div class="form-grid">
+							<label class="field field--full">
+								<span>Compétences techniques (séparées par des virgules)</span>
+								<input type="text" name="skills" placeholder="PHP, MySQL, JavaScript, Cybersécurité...">
 							</label>
 						</div>
 
