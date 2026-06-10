@@ -1,20 +1,20 @@
 <?php
-// Démarrage de la session au tout début
+// Démarrage de la session au tout début du script
 session_start();
 
 // 1. GESTION DE LA DÉCONNEXION (Requête GET)
-// On intercepte le lien api/auth.php?action=logout avant toute autre vérification
+// On intercepte le paramètre action=logout avant de valider la méthode POST
 if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['action']) && $_GET['action'] === 'logout') {
-    // Nettoyage complet du tableau de session
+    // Suppression de toutes les variables de session
     $_SESSION = [];
 
-    // Destruction de la session sur le serveur
+    // Destruction définitive de la session sur le serveur
     session_destroy();
 
-    // Suppression du cookie "Se souvenir de moi" si le navigateur en possède un
+    // Suppression du cookie de connexion automatique si existant
     if (isset($_COOKIE['junia_user'])) {
         setcookie('junia_user', '', [
-            'expires' => time() - 3600, // Date d'expiration dans le passé pour forcer sa suppression
+            'expires' => time() - 3600,
             'path' => '/',
             'secure' => !empty($_SERVER['HTTPS']),
             'httponly' => true,
@@ -22,20 +22,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['action']) && $_GET['act
         ]);
     }
 
-    // Redirection automatique vers la page de connexion avec un message de confirmation
+    // Redirection vers la page de connexion avec un message de confirmation
     header('Location: ../pages/connexion.php?message=Vous+avez+été+déconnecté+avec+succès.&type=success');
     exit;
 }
 
 // 2. GESTION DE LA CONNEXION (Requête POST)
-// Si on arrive ici, c'est qu'il ne s'agit pas d'une déconnexion, on configure le retour JSON
 header('Content-Type: application/json; charset=UTF-8');
 
 // Inclusion de la connexion à la base de données
 require_once '../inc/db.php';
 
 /**
- * Envoie une réponse JSON et arrête le script
+ * Envoie une réponse JSON formatée et arrête l'exécution
  */
 function sendJsonResponse(bool $isSuccess, string $message, array $extraData = []): void
 {
@@ -47,7 +46,7 @@ function sendJsonResponse(bool $isSuccess, string $message, array $extraData = [
 }
 
 /**
- * Lit les données reçues, que ce soit du JSON ou du POST classique
+ * Récupère les données brutes entrantes (JSON ou $_POST)
  */
 function getRequestPayload(): array
 {
@@ -61,12 +60,11 @@ function getRequestPayload(): array
     return $_POST;
 }
 
-// Validation de la méthode HTTP pour la connexion
+// Sécurité : Seules les requêtes de connexion utilisent POST
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     sendJsonResponse(false, 'Méthode non autorisée.');
 }
 
-// Récupération et nettoyage des données de connexion
 $payload = getRequestPayload();
 $email = trim((string) ($payload['email'] ?? ''));
 $password = (string) ($payload['password'] ?? '');
@@ -79,7 +77,7 @@ if ($email === '' || $password === '') {
 $userData = null;
 $userRole = null;
 
-// Vérification du compte Administrateur (hors BDD)
+// Vérification du compte Administrateur global
 if ($email === 'admin@junia.fr') {
     if ($password === 'admin123') {
         $userData = [
@@ -90,7 +88,7 @@ if ($email === 'admin@junia.fr') {
     }
 }
 
-// BDD : Recherche dans la table des étudiants
+// Recherche dans la table des étudiants
 if ($userData === null) {
     $studentQuery = $pdo->prepare('SELECT id, nom, email, password_hash FROM etudiants WHERE email = :email');
     $studentQuery->execute(['email' => $email]);
@@ -108,7 +106,7 @@ if ($userData === null) {
     }
 }
 
-// BDD : Recherche dans la table des entreprises
+// Recherche dans la table des entreprises
 if ($userData === null) {
     $companyQuery = $pdo->prepare('SELECT id, nom, email_contact, password_hash FROM entreprises WHERE email_contact = :email');
     $companyQuery->execute(['email' => $email]);
@@ -130,7 +128,7 @@ if ($userData === null) {
     sendJsonResponse(false, 'Identifiants invalides.');
 }
 
-// Enregistrement des données de l'utilisateur dans la session globale
+// Stockage des informations d'authentification en session
 $_SESSION['user'] = [
     'id' => $userData['id'] ?? null,
     'email' => $userData['email'],
@@ -138,7 +136,6 @@ $_SESSION['user'] = [
     'role' => $userRole,
 ];
 
-// Gestion du cookie "Se souvenir de moi"
 if ($remember) {
     setcookie('junia_user', $email, [
         'expires' => time() + (60 * 60 * 24 * 30),
@@ -149,7 +146,7 @@ if ($remember) {
     ]);
 }
 
-// Définition de la page de redirection selon le rôle
+// Redirection dynamique de secours selon le privilège
 $redirectUrl = '../index.php';
 if ($userRole === 'student') {
     $redirectUrl = 'profil.php';

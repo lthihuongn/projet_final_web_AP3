@@ -1,14 +1,21 @@
 <?php
 session_start();
 
+// Redirection intelligente si l'utilisateur est déjà connecté
 if (isset($_SESSION['user'])) {
-	header('Location: profil.php');
-	exit;
+    $userRole = $_SESSION['user']['role'] ?? 'student';
+    
+    if ($userRole === 'company') {
+        header('Location: catalogue.php');
+    } elseif ($userRole === 'admin') {
+        header('Location: admin.php');
+    } else {
+        header('Location: profil.php');
+    }
+    exit;
 }
-
-$message = isset($_GET['message']) ? trim((string) $_GET['message']) : '';
-$messageType = isset($_GET['type']) && $_GET['type'] === 'success' ? 'success' : 'error';
 ?>
+
 <!DOCTYPE html>
 <html lang="fr">
 <head>

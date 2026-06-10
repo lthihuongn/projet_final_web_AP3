@@ -1,10 +1,11 @@
 <?php
 session_start();
 
-/*if (!isset($_SESSION['user'])) {
-	header('Location: connexion.php?message=Merci+de+vous+connecter+pour+acc%C3%A9der+au+profil.&type=error');
+// Vérification stricte : si l'utilisateur n'est pas connecté ou n'est pas un étudiant, on le renvoie
+if (!isset($_SESSION['user']) || $_SESSION['user']['role'] !== 'student') {
+	header('Location: connexion.php?message=Accès+réservé+aux+profils+étudiants.&type=error');
 	exit;
-}*/
+}
 
 $user = $_SESSION['user'];
 $userName = htmlspecialchars((string) ($user['name'] ?? 'Utilisateur'), ENT_QUOTES, 'UTF-8');
@@ -12,6 +13,8 @@ $userRole = htmlspecialchars((string) ($user['role'] ?? 'student'), ENT_QUOTES, 
 $userEmail = htmlspecialchars((string) ($user['email'] ?? 'prenom.nom@junia.fr'), ENT_QUOTES, 'UTF-8');
 $initials = strtoupper(substr((string) ($user['name'] ?? 'U'), 0, 1));
 ?>
+
+
 <!DOCTYPE html>
 <html lang="fr">
 <head>
