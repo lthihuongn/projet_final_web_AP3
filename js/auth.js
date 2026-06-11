@@ -41,7 +41,7 @@ function showFormMessage(formElement, message, type) {
  */
 function setupLoginForm(form) {
     const endpoint = form.dataset.endpoint || '../api/auth.php';
-    const successUrl = form.dataset.success || 'profil.php';
+    const successUrl = form.dataset.success || 'profile.php'; // Mis à jour
     const submitButton = document.getElementById('loginButton');
     const originalButtonLabel = submitButton ? submitButton.textContent : 'Se connecter';
 
@@ -119,13 +119,11 @@ function setupRegisterForm(form) {
             return;
         }
 
-        // Validation de la correspondance des mots de passe
         if (password !== confirmPassword) {
             showFormMessage(form, 'Les mots de passe ne correspondent pas.', 'error');
             return;
         }
 
-        // Validation de la case obligatoire de consentement RGPD
         if (!gdprConsent) {
             showFormMessage(form, 'Vous devez accepter la politique de confidentialité pour vous inscrire.', 'error');
             return;
@@ -159,8 +157,8 @@ function setupRegisterForm(form) {
                 return;
             }
 
-            // Redirection vers la page de connexion avec les paramètres de succès retournés par l'API
-            window.location.href = data.redirect || 'connexion.php';
+            // Redirection vers la page de connexion
+            window.location.href = data.redirect || 'login.php'; // Mis à jour
         } catch (error) {
             showFormMessage(form, 'Impossible de contacter le serveur. Réessaie.', 'error');
         } finally {

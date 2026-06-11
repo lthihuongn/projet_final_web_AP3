@@ -1,10 +1,11 @@
 <?php
 session_start();
 
-/*if (!isset($_SESSION['user'])) {
-	header('Location: connexion.php?message=Merci+de+vous+connecter+pour+acc%C3%A9der+au+catalogue.&type=error');
+// On réactive la sécurité : si non connecté, retour à la page de connexion (anglaise)
+if (!isset($_SESSION['user'])) {
+	header('Location: login.php?message=Merci+de+vous+connecter+pour+accéder+au+catalogue.&type=error');
 	exit;
-}*/
+}
 
 $user = $_SESSION['user'];
 $userName = htmlspecialchars((string) ($user['name'] ?? 'Utilisateur'), ENT_QUOTES, 'UTF-8');
@@ -19,7 +20,7 @@ $userRole = htmlspecialchars((string) ($user['role'] ?? 'student'), ENT_QUOTES, 
 	<link rel="preconnect" href="https://fonts.googleapis.com">
 	<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 	<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@600;700;800&family=Open+Sans:wght@400;600;700&display=swap" rel="stylesheet">
-	<link rel="stylesheet" href="../css/style.css?v=20260610">
+	<link rel="stylesheet" href="../css/style.css?v=<?php echo time(); ?>">
 </head>
 <body class="catalogue-page">
 	<header class="topbar">
@@ -33,12 +34,18 @@ $userRole = htmlspecialchars((string) ($user['role'] ?? 'student'), ENT_QUOTES, 
 
 		<nav class="topnav" aria-label="Navigation principale">
 			<a href="../index.php">Accueil</a>
-			<a href="profil.php">Mon profil</a>
-			<a class="is-active" href="catalogue.php">Catalogue</a>
+			<?php if ($userRole === 'student'): ?>
+				<a href="profile.php">Mon profil</a>
+			<?php endif; ?>
+			<a class="is-active" href="catalog.php">Catalogue</a>
+			<?php if ($userRole === 'admin'): ?>
+				<a href="admin.php">Administration</a>
+			<?php endif; ?>
+			<a href="../api/auth.php?action=logout" style="color: var(--junia-orange);">Déconnexion</a>
 		</nav>
 	</header>
 
-	<main class="catalogue-shell" data-profiles-endpoint="../api/profils.php" data-convoquer-endpoint="../api/convoquer.php">
+	<main class="catalogue-shell" data-profiles-endpoint="../api/profiles.php" data-convoquer-endpoint="../api/interview.php">
 		<section class="catalogue-hero">
 			<div>
 				<p class="eyebrow">Accès entreprise</p>
@@ -126,6 +133,6 @@ $userRole = htmlspecialchars((string) ($user['role'] ?? 'student'), ENT_QUOTES, 
 		</section>
 	</main>
 
-	<script src="../js/catalogue.js"></script>
+	<script src="../js/catalog.js"></script>
 </body>
 </html>

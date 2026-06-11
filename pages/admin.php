@@ -4,7 +4,7 @@ session_start();
 
 // Vérification stricte des droits administrateur
 if (!isset($_SESSION['user']) || $_SESSION['user']['role'] !== 'admin') {
-    header('Location: connexion.php?message=Accès+réservé+à+l\'administration.&type=error');
+    header('Location: login.php?message=Accès+réservé+à+l\'administration.&type=error');
     exit;
 }
 
