@@ -1,27 +1,30 @@
 document.addEventListener('DOMContentLoaded', () => {
-	const catalogue = document.querySelector('.catalogue-shell');
-	if (!catalogue) {
+	const catalogShell = document.querySelector('.catalogue-shell');
+	if (!catalogShell) {
 		return;
 	}
 
-	const endpoint = catalogue.dataset.profilesEndpoint || '../api/profils.php';
-	const convoquerEndpoint = catalogue.dataset.convoquerEndpoint || '../api/convoquer.php';
+	// Nouveaux chemins d'API
+	const endpoint = catalogShell.dataset.profilesEndpoint || '../api/profiles.php';
+	const interviewEndpoint = catalogShell.dataset.convoquerEndpoint || '../api/interview.php';
+	
 	const grid = document.getElementById('profilesGrid');
-	const message = document.getElementById('catalogueMessage');
+	const messageNode = document.getElementById('catalogueMessage');
 	const resultsMeta = document.getElementById('resultsMeta');
 	const profilesCount = document.getElementById('profilesCount');
-	const convoquesCount = document.getElementById('convoquesCount');
+	const interviewCountNode = document.getElementById('convoquesCount');
+	
 	const searchInput = document.getElementById('searchInput');
 	const domainFilter = document.getElementById('domainFilter');
 	const contractFilter = document.getElementById('contractFilter');
 	const skillFilter = document.getElementById('skillFilter');
 	const schoolFilter = document.getElementById('schoolFilter');
-	const resetFilters = document.getElementById('resetFilters');
+	const resetFiltersBtn = document.getElementById('resetFilters');
 
-	let profiles = [];
-	let convocationsCount = 0;
+	let profilesList = [];
+	let sentInterviewsCount = 0;
 
-	const normalize = (value) => (value || '')
+	const normalizeText = (value) => (value || '')
 		.toString()
 		.normalize('NFD')
 		.replace(/[\u0300-\u036f]/g, '')
@@ -35,63 +38,38 @@ document.addEventListener('DOMContentLoaded', () => {
 		.replace(/"/g, '&quot;')
 		.replace(/'/g, '&#39;');
 
-	const setMessage = (text, type = 'info') => {
-		message.textContent = text;
-		message.dataset.type = type;
-		message.hidden = !text;
+	const displayMessage = (text, type = 'info') => {
+		messageNode.textContent = text;
+		messageNode.dataset.type = type;
+		messageNode.hidden = !text;
 	};
 
 	const syncCounters = (visibleCount) => {
-		if (profilesCount) {
-			profilesCount.textContent = String(visibleCount);
-		}
-		if (convoquesCount) {
-			convoquesCount.textContent = String(convocationsCount);
-		}
-		if (resultsMeta) {
-			resultsMeta.textContent = `${visibleCount} profil${visibleCount > 1 ? 's' : ''} trouvé${visibleCount > 1 ? 's' : ''}`;
-		}
+		if (profilesCount) profilesCount.textContent = String(visibleCount);
+		if (interviewCountNode) interviewCountNode.textContent = String(sentInterviewsCount);
+		if (resultsMeta) resultsMeta.textContent = `${visibleCount} profil${visibleCount > 1 ? 's' : ''} trouvé${visibleCount > 1 ? 's' : ''}`;
 	};
 
 	const getActiveFilters = () => ({
-		search: normalize(searchInput.value),
-		domain: normalize(domainFilter.value),
-		contract: normalize(contractFilter.value),
-		skill: normalize(skillFilter.value),
-		school: normalize(schoolFilter.value),
+		search: normalizeText(searchInput.value),
+		domain: normalizeText(domainFilter.value),
+		contract: normalizeText(contractFilter.value),
+		skill: normalizeText(skillFilter.value),
+		school: normalizeText(schoolFilter.value),
 	});
 
 	const profileMatches = (profile, filters) => {
-		const haystack = normalize([
-			profile.name,
-			profile.school,
-			profile.promo,
-			profile.bio,
-			...(profile.domains || []),
-			...(profile.contracts || []),
-			...(profile.skills || []),
-			...(profile.languages || []),
+		const haystack = normalizeText([
+			profile.name, profile.school, profile.promo, profile.bio,
+			...(profile.domains || []), ...(profile.contracts || []),
+			...(profile.skills || []), ...(profile.languages || []),
 		].join(' '));
 
-		if (filters.search && !haystack.includes(filters.search)) {
-			return false;
-		}
-
-		if (filters.domain && !(profile.domains || []).some((domain) => normalize(domain).includes(filters.domain))) {
-			return false;
-		}
-
-		if (filters.contract && !(profile.contracts || []).some((contract) => normalize(contract).includes(filters.contract))) {
-			return false;
-		}
-
-		if (filters.skill && !(profile.skills || []).some((skill) => normalize(skill).includes(filters.skill))) {
-			return false;
-		}
-
-		if (filters.school && normalize(profile.promoCode || profile.schoolCode || profile.schoolSlug || '') !== filters.school) {
-			return false;
-		}
+		if (filters.search && !haystack.includes(filters.search)) return false;
+		if (filters.domain && !(profile.domains || []).some((d) => normalizeText(d).includes(filters.domain))) return false;
+		if (filters.contract && !(profile.contracts || []).some((c) => normalizeText(c).includes(filters.contract))) return false;
+		if (filters.skill && !(profile.skills || []).some((s) => normalizeText(s).includes(filters.skill))) return false;
+		if (filters.school && normalizeText(profile.promoCode || profile.schoolCode || '') !== filters.school) return false;
 
 		return true;
 	};
@@ -102,7 +80,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 	const renderProfiles = () => {
 		const filters = getActiveFilters();
-		const visibleProfiles = profiles.filter((profile) => profileMatches(profile, filters));
+		const visibleProfiles = profilesList.filter((profile) => profileMatches(profile, filters));
 
 		grid.innerHTML = visibleProfiles.length === 0
 			? '<article class="empty-state"><h4>Aucun profil ne correspond à ces filtres.</h4><p>Essaie de supprimer un filtre ou d’élargir la recherche.</p></article>'
@@ -168,13 +146,11 @@ document.addEventListener('DOMContentLoaded', () => {
 	};
 
 	const loadProfiles = async () => {
-		setMessage('Chargement des profils...', 'info');
+		displayMessage('Chargement des profils...', 'info');
 
 		try {
 			const response = await fetch(endpoint, {
-				headers: {
-					'Accept': 'application/json'
-				}
+				headers: { 'Accept': 'application/json' }
 			});
 
 			const data = await response.json().catch(() => null);
@@ -183,34 +159,34 @@ document.addEventListener('DOMContentLoaded', () => {
 				throw new Error((data && data.message) ? data.message : 'Impossible de charger le catalogue.');
 			}
 
-			profiles = Array.isArray(data.profils) ? data.profils : [];
-			setMessage('', 'info');
+			profilesList = Array.isArray(data.profils) ? data.profils : [];
+			displayMessage('', 'info');
 			renderProfiles();
 		} catch (error) {
 			grid.innerHTML = '';
-			setMessage(error.message || 'Le catalogue est indisponible.', 'error');
+			displayMessage(error.message || 'Le catalogue est indisponible.', 'error');
 			syncCounters(0);
 		}
 	};
 
-	const submitConvocation = async (form) => {
+	const processInterviewForm = async (form) => {
 		const profileId = form.dataset.profileId;
 		const dateField = form.querySelector('input[name="date"]');
 		const messageField = form.querySelector('textarea[name="message"]');
-		const submitButton = form.querySelector('button[type="submit"]');
+		const submitBtn = form.querySelector('button[type="submit"]');
 
 		if (!profileId || !dateField || !dateField.value) {
-			setMessage('Merci de choisir une date de convocation.', 'error');
+			displayMessage('Merci de choisir une date de convocation.', 'error');
 			return;
 		}
 
-		if (submitButton) {
-			submitButton.disabled = true;
-			submitButton.textContent = 'Envoi...';
+		if (submitBtn) {
+			submitBtn.disabled = true;
+			submitBtn.textContent = 'Envoi...';
 		}
 
 		try {
-			const response = await fetch(convoquerEndpoint, {
+			const response = await fetch(interviewEndpoint, {
 				method: 'POST',
 				headers: {
 					'Content-Type': 'application/json',
@@ -229,49 +205,43 @@ document.addEventListener('DOMContentLoaded', () => {
 				throw new Error((data && data.message) ? data.message : 'La convocation a échoué.');
 			}
 
-			convocationsCount += 1;
+			sentInterviewsCount += 1;
 			syncCounters(document.querySelectorAll('.profile-card').length);
-			setMessage(data.message || 'Convocation envoyée avec succès.', 'success');
+			displayMessage(data.message || 'Convocation envoyée avec succès.', 'success');
 			form.hidden = true;
 			form.reset();
 			renderProfiles();
 		} catch (error) {
-			setMessage(error.message || 'Impossible d’envoyer la convocation.', 'error');
+			displayMessage(error.message || 'Impossible d’envoyer la convocation.', 'error');
 		} finally {
-			if (submitButton) {
-				submitButton.disabled = false;
-				submitButton.textContent = 'Envoyer la convocation';
+			if (submitBtn) {
+				submitBtn.disabled = false;
+				submitBtn.textContent = 'Envoyer la convocation';
 			}
 		}
 	};
 
 	grid.addEventListener('click', (event) => {
-		const toggleButton = event.target.closest('[data-action="toggle-convoquer"]');
-		const closeButton = event.target.closest('[data-action="close-convoquer"]');
+		const toggleBtn = event.target.closest('[data-action="toggle-convoquer"]');
+		const closeBtn = event.target.closest('[data-action="close-convoquer"]');
 
-		if (toggleButton) {
-			const target = document.getElementById(toggleButton.dataset.target);
-			if (target) {
-				target.hidden = !target.hidden;
-			}
+		if (toggleBtn) {
+			const target = document.getElementById(toggleBtn.dataset.target);
+			if (target) target.hidden = !target.hidden;
 		}
 
-		if (closeButton) {
-			const form = closeButton.closest('.convoquer-form');
-			if (form) {
-				form.hidden = true;
-			}
+		if (closeBtn) {
+			const form = closeBtn.closest('.convoquer-form');
+			if (form) form.hidden = true;
 		}
 	});
 
 	grid.addEventListener('submit', (event) => {
 		const form = event.target.closest('.convoquer-form');
-		if (!form) {
-			return;
-		}
+		if (!form) return;
 
 		event.preventDefault();
-		submitConvocation(form);
+		processInterviewForm(form);
 	});
 
 	[searchInput, domainFilter, contractFilter, skillFilter, schoolFilter].forEach((control) => {
@@ -279,7 +249,7 @@ document.addEventListener('DOMContentLoaded', () => {
 		control.addEventListener('change', renderProfiles);
 	});
 
-	resetFilters.addEventListener('click', () => {
+	resetFiltersBtn.addEventListener('click', () => {
 		searchInput.value = '';
 		domainFilter.value = '';
 		contractFilter.value = '';

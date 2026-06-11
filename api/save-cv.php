@@ -40,12 +40,10 @@ if (!isset($_SESSION['user']) || $_SESSION['user']['role'] !== 'student') {
     sendJsonResponse(false, 'Accès non autorisé ou session expirée.');
 }
 
-// Vérification de la méthode de la requête
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     sendJsonResponse(false, 'Méthode non autorisée. Une requête POST est attendue.');
 }
 
-// Extraction et nettoyage des données reçues
 $payload = getRequestPayload();
 
 // Éléments de la table 'etudiants'
@@ -71,7 +69,6 @@ $skillsString = trim((string) ($payload['skills'] ?? ''));
 $skillsArray = $skillsString !== '' ? array_map('trim', explode(',', $skillsString)) : [];
 
 try {
-    // Récupération de l'ID de l'étudiant via l'email stocké en session
     $userEmail = $_SESSION['user']['email'];
     $findUserQuery = $pdo->prepare('SELECT id FROM etudiants WHERE email = :email');
     $findUserQuery->execute(['email' => $userEmail]);
@@ -89,9 +86,7 @@ try {
     // 1. Mise à jour de la table 'etudiants'
     $updateStudentQuery = $pdo->prepare('
         UPDATE etudiants 
-        SET nom = :name, 
-            biographie = :bio, 
-            domaines_recherche = :domains 
+        SET nom = :name, biographie = :bio, domaines_recherche = :domains 
         WHERE id = :id
     ');
     $updateStudentQuery->execute([
@@ -101,7 +96,7 @@ try {
         'id' => $studentId
     ]);
 
-    // 2. Gestion de la table 'formations' (Dernière formation)
+    // 2. Gestion de la table 'formations'
     $checkEducationQuery = $pdo->prepare('SELECT id FROM formations WHERE etudiant_id = :student_id');
     $checkEducationQuery->execute(['student_id' => $studentId]);
     
@@ -124,7 +119,7 @@ try {
         'student_id' => $studentId
     ]);
 
-    // 3. Gestion de la table 'experiences' (Dernière expérience)
+    // 3. Gestion de la table 'experiences'
     $checkExperienceQuery = $pdo->prepare('SELECT id FROM experiences WHERE etudiant_id = :student_id');
     $checkExperienceQuery->execute(['student_id' => $studentId]);
 
@@ -149,7 +144,7 @@ try {
         'student_id' => $studentId
     ]);
 
-    // 4. Gestion de la table 'competences' (Nettoyage et réinsertion)
+    // 4. Gestion de la table 'competences'
     $deleteSkillsQuery = $pdo->prepare('DELETE FROM competences WHERE etudiant_id = :student_id');
     $deleteSkillsQuery->execute(['student_id' => $studentId]);
 
@@ -157,18 +152,14 @@ try {
         $insertSkillQuery = $pdo->prepare('INSERT INTO competences (etudiant_id, competence) VALUES (:student_id, :skill)');
         foreach ($skillsArray as $skill) {
             if ($skill !== '') {
-                $insertSkillQuery->execute([
-                    'student_id' => $studentId,
-                    'skill' => $skill
-                ]);
+                $insertSkillQuery->execute(['student_id' => $studentId, 'skill' => $skill]);
             }
         }
     }
 
-    // Validation définitive de toutes les requêtes de la transaction
+    // Validation de la transaction
     $pdo->commit();
 
-    // Actualisation du nom en session si celui-ci a changé
     if ($name !== '') {
         $_SESSION['user']['name'] = $name;
     }
@@ -176,7 +167,6 @@ try {
     sendJsonResponse(true, 'Votre profil et votre CV ont été enregistrés avec succès !');
 
 } catch (Exception $exception) {
-    // En cas de problème, annulation complète des requêtes non validées
     if ($pdo->inTransaction()) {
         $pdo->rollBack();
     }

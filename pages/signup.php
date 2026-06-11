@@ -6,11 +6,11 @@ if (isset($_SESSION['user'])) {
     $userRole = $_SESSION['user']['role'] ?? 'student';
     
     if ($userRole === 'company') {
-        header('Location: catalogue.php');
+        header('Location: catalog.php');
     } elseif ($userRole === 'admin') {
         header('Location: admin.php');
     } else {
-        header('Location: profil.php');
+        header('Location: profile.php');
     }
     exit;
 }
@@ -29,9 +29,9 @@ if (isset($_SESSION['user'])) {
 		<section class="auth-card">
 			<h1>Inscription</h1>
 
-			<?php if ($message !== ''): ?>
-				<div class="alert <?php echo htmlspecialchars($messageType, ENT_QUOTES, 'UTF-8'); ?>" role="status">
-					<?php echo htmlspecialchars($message, ENT_QUOTES, 'UTF-8'); ?>
+            <?php if (isset($_GET['message'])): ?>
+				<div class="alert <?php echo htmlspecialchars($_GET['type'] ?? 'info', ENT_QUOTES, 'UTF-8'); ?>" role="status">
+					<?php echo htmlspecialchars($_GET['message'], ENT_QUOTES, 'UTF-8'); ?>
 				</div>
 			<?php endif; ?>
 
@@ -62,15 +62,15 @@ if (isset($_SESSION['user'])) {
 				</div>
 
 				<div class="form-row form-row--compact">
-					<a class="tiny" href="connexion.php">Déjà un compte ? Connexion</a>
+					<a class="tiny" href="login.php">Déjà un compte ? Connexion</a>
 				</div>
 
 				<div class="field" style="margin-top: 8px;">
     				<label class="checkbox" style="align-items: flex-start;">
         				<input type="checkbox" name="gdpr_consent" required style="margin-top: 4px;">
         				<span style="font-weight: normal; font-size: 0.85rem; line-height: 1.4;">
-           					 J'accepte que mes données personnelles soient collectées, stockées et affichées aux entreprises partenaires de JUNIA dans le strict cadre de la recherche de stages et d'emplois. 
-            				<a href="rgpd.php" style="color: var(--accent); text-decoration: underline;">En savoir plus</a>.
+           					 J'accepte que mes données personnelles soient collectées, stockées et affichées aux entreprises partenaires de JUNIA. 
+            				<a href="gdpr.php" style="color: var(--accent); text-decoration: underline;">En savoir plus</a>.
         				</span>
     				</label>
 				</div>

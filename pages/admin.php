@@ -4,7 +4,7 @@ session_start();
 
 // Vérification stricte des droits administrateur
 if (!isset($_SESSION['user']) || $_SESSION['user']['role'] !== 'admin') {
-    header('Location: connexion.php?message=Accès+réservé+à+l\'administration.&type=error');
+    header('Location: login.php?message=Accès+réservé+à+l\'administration.&type=error');
     exit;
 }
 
@@ -16,11 +16,11 @@ $messageType = 'success';
 
 // Traitement de la création manuelle d'une entreprise par l'administrateur
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['form_action']) && $_POST['form_action'] === 'create_company') {
-    $companyName = trim((string) $_POST['company_name']);
-    $contactEmail = trim((string) $_POST['contact_email']);
-    $industrySector = trim((string) $_POST['industry_sector']);
+    $companyName = trim((string) ($_POST['company_name'] ?? ''));
+    $contactEmail = trim((string) ($_POST['contact_email'] ?? ''));
+    $industrySector = trim((string) ($_POST['industry_sector'] ?? ''));
     
-    // Génération d'un mot de passe provisoire sécurisé (8 caractères)
+    // Génération d'un mot de passe provisoire sécurisé de 8 caractères
     $temporaryPassword = bin2hex(random_bytes(4));
     $hashedPassword = password_hash($temporaryPassword, PASSWORD_DEFAULT);
 
@@ -44,115 +44,98 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['form_action']) && $_P
 
 // Récupération des données pour les tableaux de bord
 $studentsQuery = $pdo->query('SELECT id, nom, email, date_creation FROM etudiants ORDER BY date_creation DESC');
-$studentList = $studentsQuery->fetchAll();
+$students = $studentsQuery->fetchAll();
 
 $companiesQuery = $pdo->query('SELECT id, nom, email_contact, secteur FROM entreprises ORDER BY date_creation DESC');
-$companyList = $companiesQuery->fetchAll();
+$companies = $companiesQuery->fetchAll();
+
+// Configuration de la racine relative et inclusion du layout commun
+$dir = '../';
+require_once '../inc/header.php';
 ?>
-<!DOCTYPE html>
-<html lang="fr">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Administration | Junia CV</title>
-    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@600;700;800&family=Open+Sans:wght@400;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="../css/style.css">
-</head>
-<body class="catalogue-page">
-    <header class="topbar">
-        <div class="brand-block">
-            <div class="brand-logo" aria-hidden="true">J</div>
-            <div>
-                <p class="brand-kicker">JUNIA CV</p>
-                <h1>Administration</h1>
-            </div>
+
+<div class="catalogue-shell">
+    <section class="catalogue-hero" style="grid-template-columns: 1fr;">
+        <div>
+            <p class="eyebrow">Tableau de bord</p>
+            <h2>Gestion de la plateforme</h2>
+            <p class="hero-text">Gérez les comptes étudiants, modérez les profils et invitez de nouvelles entreprises partenaires.</p>
         </div>
-        <nav class="topnav">
-            <a href="../index.php">Accueil</a>
-            <a href="api/auth.php?action=logout">Déconnexion</a>
-        </nav>
-    </header>
+    </section>
 
-    <main class="catalogue-shell">
-        <section class="catalogue-hero" style="grid-template-columns: 1fr;">
-            <div>
-                <p class="eyebrow">Tableau de bord</p>
-                <h2>Gestion de la plateforme</h2>
-                <p class="hero-text">Gérez les comptes étudiants, modérez les profils et invitez de nouvelles entreprises partenaires.</p>
+    <?php if ($systemMessage !== ''): ?>
+        <div class="notice" data-type="<?php echo $messageType; ?>" style="display: block;">
+            <?php echo $systemMessage; ?>
+        </div>
+    <?php endif; ?>
+
+    <section class="catalogue-layout">
+        <aside class="filters-panel">
+            <h3>Ajouter une entreprise</h3>
+            <form method="post" action="admin.php" style="margin-top: 16px;">
+                <input type="hidden" name="form_action" value="create_company">
+                <label class="filter-field">
+                    <span>Nom de l'entreprise</span>
+                    <input type="text" name="company_name" required>
+                </label>
+                <label class="filter-field">
+                    <span>Email de contact</span>
+                    <input type="email" name="contact_email" required>
+                </label>
+                <label class="filter-field">
+                    <span>Secteur d'activité</span>
+                    <input type="text" name="industry_sector" placeholder="Ex: IT, Énergie, Cybersécurité...">
+                </label>
+                <button type="submit" class="button button--small" style="margin-top: 16px;">Créer le compte</button>
+            </form>
+        </aside>
+
+        <section class="results-panel">
+            <div class="results-header">
+                <h3>Comptes Étudiants (<?php echo count($students); ?>)</h3>
+            </div>
+            <div style="overflow-x: auto;">
+                <table style="width: 100%; text-align: left; border-collapse: collapse; margin-bottom: 32px;">
+                    <tr style="border-bottom: 1px solid rgba(107, 44, 145, 0.2); background: rgba(107, 44, 145, 0.05);">
+                        <th style="padding: 12px; color: var(--junia-violet);">ID</th>
+                        <th style="padding: 12px; color: var(--junia-violet);">Nom</th>
+                        <th style="padding: 12px; color: var(--junia-violet);">Email</th>
+                        <th style="padding: 12px; color: var(--junia-violet);">Action</th>
+                    </tr>
+                    <?php foreach ($students as $student): ?>
+                    <tr style="border-bottom: 1px solid rgba(107, 44, 145, 0.1);">
+                        <td style="padding: 12px; color: #1b1330;"><?php echo $student['id']; ?></td>
+                        <td style="padding: 12px; color: #1b1330;"><strong><?php echo htmlspecialchars((string)$student['nom'], ENT_QUOTES, 'UTF-8'); ?></strong></td>
+                        <td style="padding: 12px; color: #665a7f;"><?php echo htmlspecialchars((string)$student['email'], ENT_QUOTES, 'UTF-8'); ?></td>
+                        <td style="padding: 12px;"><button class="secondary-button" style="padding: 6px 12px; margin: 0; font-size: 0.85rem;">Supprimer</button></td>
+                    </tr>
+                    <?php endforeach; ?>
+                </table>
+            </div>
+
+            <div class="results-header">
+                <h3>Entreprises Partenaires (<?php echo count($companies); ?>)</h3>
+            </div>
+            <div style="overflow-x: auto;">
+                <table style="width: 100%; text-align: left; border-collapse: collapse;">
+                    <tr style="border-bottom: 1px solid rgba(107, 44, 145, 0.2); background: rgba(107, 44, 145, 0.05);">
+                        <th style="padding: 12px; color: var(--junia-violet);">Entreprise</th>
+                        <th style="padding: 12px; color: var(--junia-violet);">Email</th>
+                        <th style="padding: 12px; color: var(--junia-violet);">Secteur</th>
+                    </tr>
+                    <?php foreach ($companies as $company): ?>
+                    <tr style="border-bottom: 1px solid rgba(107, 44, 145, 0.1);">
+                        <td style="padding: 12px; color: #1b1330;"><strong><?php echo htmlspecialchars((string)$company['nom'], ENT_QUOTES, 'UTF-8'); ?></strong></td>
+                        <td style="padding: 12px; color: #665a7f;"><?php echo htmlspecialchars((string)$company['email_contact'], ENT_QUOTES, 'UTF-8'); ?></td>
+                        <td style="padding: 12px; color: #665a7f;"><?php echo htmlspecialchars((string)$company['secteur'], ENT_QUOTES, 'UTF-8'); ?></td>
+                    </tr>
+                    <?php endforeach; ?>
+                </table>
             </div>
         </section>
+    </section>
+</div>
 
-        <?php if ($systemMessage !== ''): ?>
-            <div class="notice" data-type="<?php echo $messageType; ?>" style="display: block;">
-                <?php echo $systemMessage; ?>
-            </div>
-        <?php endif; ?>
-
-        <section class="catalogue-layout">
-            <aside class="filters-panel">
-                <h3>Ajouter une entreprise</h3>
-                <form method="post" action="admin.php" style="margin-top: 16px;">
-                    <input type="hidden" name="form_action" value="create_company">
-                    <label class="filter-field">
-                        <span>Nom de l'entreprise</span>
-                        <input type="text" name="company_name" required>
-                    </label>
-                    <label class="filter-field">
-                        <span>Email de contact</span>
-                        <input type="email" name="contact_email" required>
-                    </label>
-                    <label class="filter-field">
-                        <span>Secteur d'activité</span>
-                        <input type="text" name="industry_sector" placeholder="Ex: IT, Énergie, Cybersécurité...">
-                    </label>
-                    <button type="submit" class="button button--small" style="margin-top: 16px;">Créer le compte</button>
-                </form>
-            </aside>
-
-            <section class="results-panel">
-                <div class="results-header">
-                    <h3>Comptes Étudiants (<?php echo count($studentList); ?>)</h3>
-                </div>
-                <div style="overflow-x: auto;">
-                    <table style="width: 100%; text-align: left; border-collapse: collapse; margin-bottom: 32px;">
-                        <tr style="border-bottom: 1px solid rgba(107, 44, 145, 0.2);">
-                            <th style="padding: 12px;">ID</th>
-                            <th style="padding: 12px;">Nom</th>
-                            <th style="padding: 12px;">Email</th>
-                            <th style="padding: 12px;">Action</th>
-                        </tr>
-                        <?php foreach ($studentList as $student): ?>
-                        <tr style="border-bottom: 1px solid rgba(107, 44, 145, 0.1);">
-                            <td style="padding: 12px;"><?php echo $student['id']; ?></td>
-                            <td style="padding: 12px;"><strong><?php echo htmlspecialchars((string)$student['nom']); ?></strong></td>
-                            <td style="padding: 12px;"><?php echo htmlspecialchars((string)$student['email']); ?></td>
-                            <td style="padding: 12px;"><button class="secondary-button" style="padding: 6px 12px; margin: 0;">Supprimer</button></td>
-                        </tr>
-                        <?php endforeach; ?>
-                    </table>
-                </div>
-
-                <div class="results-header">
-                    <h3>Entreprises Partenaires (<?php echo count($companyList); ?>)</h3>
-                </div>
-                <div style="overflow-x: auto;">
-                    <table style="width: 100%; text-align: left; border-collapse: collapse;">
-                        <tr style="border-bottom: 1px solid rgba(107, 44, 145, 0.2);">
-                            <th style="padding: 12px;">Entreprise</th>
-                            <th style="padding: 12px;">Email</th>
-                            <th style="padding: 12px;">Secteur</th>
-                        </tr>
-                        <?php foreach ($companyList as $company): ?>
-                        <tr style="border-bottom: 1px solid rgba(107, 44, 145, 0.1);">
-                            <td style="padding: 12px;"><strong><?php echo htmlspecialchars((string)$company['nom']); ?></strong></td>
-                            <td style="padding: 12px;"><?php echo htmlspecialchars((string)$company['email_contact']); ?></td>
-                            <td style="padding: 12px;"><?php echo htmlspecialchars((string)$company['secteur']); ?></td>
-                        </tr>
-                        <?php endforeach; ?>
-                    </table>
-                </div>
-            </section>
-        </section>
-    </main>
-</body>
-</html>
+<?php
+require_once '../inc/footer.php';
+?>

@@ -11,7 +11,7 @@
             <div class="col-md-6 text-center text-md-end">
                 <ul class="list-inline mb-0">
                     <li class="list-inline-item me-3">
-                        <a href="<?php echo $dir; ?>pages/rgpd.php" class="text-decoration-none text-light opacity-75 href-hover">
+                        <a href="<?php echo $dir; ?>pages/gdpr.php" class="text-decoration-none text-light opacity-75 href-hover">
                             <i class="bi bi-shield-check"></i> Mentions Légales & RGPD
                         </a>
                     </li>
@@ -34,7 +34,6 @@
 </style>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
-
 <script src="<?php echo $dir; ?>js/auth.js"></script>
 </body>
 </html>

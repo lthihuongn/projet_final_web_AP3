@@ -4,10 +4,13 @@ if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
 
-// Sécurité : S'assurer que $dir est défini même si oublié dans la page appelante
+// Sécurité : S'assurer que la variable de répertoire est définie
 if (!isset($dir)) {
     $dir = '';
 }
+
+// Détection de la page actuelle pour la classe d'activation
+$currentModule = basename($_SERVER['PHP_SELF']);
 ?>
 <!DOCTYPE html>
 <html lang="fr">
@@ -21,40 +24,41 @@ if (!isset($dir)) {
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&family=Open+Sans:wght@400;600&display=swap" rel="stylesheet">
     
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-    
-    
-<!-- Remplacer l'ancienne ligne du CSS par celle-ci : -->
-<link rel="stylesheet" href="<?php echo $dir; ?>css/style.css?v=<?php echo time(); ?>"></head>
+    <link rel="stylesheet" href="<?php echo $dir; ?>css/style.css?v=<?php echo time(); ?>">
+</head>
 <body>
 
 <header class="topbar">
-		<div class="brand-block">
-			<div class="brand-logo" aria-hidden="true">J</div>
-			<div>
-				<p class="brand-kicker">JUNIA CV</p>
-			</div>
-		</div>
+    <div class="brand-block">
+        <div class="brand-logo" aria-hidden="true">J</div>
+        <div>
+            <p class="brand-kicker">JUNIA CV</p>
+        </div>
+    </div>
 
-		<nav class="topnav" aria-label="Navigation principale">
-			<a href="<?php echo $dir; ?>index.php">Accueil</a>
-			
-			<?php if (isset($_SESSION['user'])): ?>
-				<?php if ($_SESSION['user']['role'] === 'student'): ?>
-					<a href="<?php echo $dir; ?>pages/profil.php">Mon profil</a>
-					<a href="<?php echo $dir; ?>pages/catalogue.php">Catalogue</a>
-				<?php elseif ($_SESSION['user']['role'] === 'company'): ?>
-					<a href="<?php echo $dir; ?>pages/catalogue.php">Catalogue</a>
-				<?php elseif ($_SESSION['user']['role'] === 'admin'): ?>
-					<a href="<?php echo $dir; ?>pages/admin.php">Administration</a>
-					<a href="<?php echo $dir; ?>pages/catalogue.php">Catalogue</a>
-				<?php endif; ?>
-				
-				<a href="<?php echo $dir; ?>api/auth.php?action=logout" style="color: var(--junia-orange);">Déconnexion</a>
-			<?php else: ?>
-				<a href="<?php echo $dir; ?>pages/connexion.php">Connexion</a>
-			<?php endif; ?>
-		</nav>
-
-	</header>
+    <nav class="topnav" aria-label="Navigation principale">
+        <?php if (isset($simpleHeader) && $simpleHeader === true): ?>
+            <a href="<?php echo $dir; ?>index.php">Retour à l'accueil</a>
+        <?php else: ?>
+            <a class="<?php echo $currentModule === 'index.php' ? 'is-active' : ''; ?>" href="<?php echo $dir; ?>index.php">Accueil</a>
+            
+            <?php if (isset($_SESSION['user'])): ?>
+                <?php if ($_SESSION['user']['role'] === 'student'): ?>
+                    <a class="<?php echo $currentModule === 'profile.php' ? 'is-active' : ''; ?>" href="<?php echo $dir; ?>pages/profile.php">Mon profil</a>
+                    <a class="<?php echo $currentModule === 'catalog.php' ? 'is-active' : ''; ?>" href="<?php echo $dir; ?>pages/catalog.php">Catalogue</a>
+                <?php elseif ($_SESSION['user']['role'] === 'company'): ?>
+                    <a class="<?php echo $currentModule === 'catalog.php' ? 'is-active' : ''; ?>" href="<?php echo $dir; ?>pages/catalog.php">Catalogue</a>
+                <?php elseif ($_SESSION['user']['role'] === 'admin'): ?>
+                    <a class="<?php echo $currentModule === 'admin.php' ? 'is-active' : ''; ?>" href="<?php echo $dir; ?>pages/admin.php">Administration</a>
+                    <a class="<?php echo $currentModule === 'catalog.php' ? 'is-active' : ''; ?>" href="<?php echo $dir; ?>pages/catalog.php">Catalogue</a>
+                <?php endif; ?>
+                
+                <a href="<?php echo $dir; ?>api/auth.php?action=logout">Déconnexion</a>
+            <?php else: ?>
+                <a class="<?php echo $currentModule === 'login.php' ? 'is-active' : ''; ?>" href="<?php echo $dir; ?>pages/login.php">Connexion</a>
+            <?php endif; ?>
+        <?php endif; ?>
+    </nav>
+</header>
 
 <main class="container my-5 flex-grow-1">
