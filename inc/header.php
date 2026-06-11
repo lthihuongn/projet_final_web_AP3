@@ -8,6 +8,9 @@ if (session_status() === PHP_SESSION_NONE) {
 if (!isset($dir)) {
     $dir = '';
 }
+
+// Détection de la page actuelle pour la classe d'activation
+$currentModule = basename($_SERVER['PHP_SELF']);
 ?>
 <!DOCTYPE html>
 <html lang="fr">
@@ -34,22 +37,26 @@ if (!isset($dir)) {
     </div>
 
     <nav class="topnav" aria-label="Navigation principale">
-        <a href="<?php echo $dir; ?>index.php">Accueil</a>
-        
-        <?php if (isset($_SESSION['user'])): ?>
-            <?php if ($_SESSION['user']['role'] === 'student'): ?>
-                <a href="<?php echo $dir; ?>pages/profile.php">Mon profil</a>
-                <a href="<?php echo $dir; ?>pages/catalog.php">Catalogue</a>
-            <?php elseif ($_SESSION['user']['role'] === 'company'): ?>
-                <a href="<?php echo $dir; ?>pages/catalog.php">Catalogue</a>
-            <?php elseif ($_SESSION['user']['role'] === 'admin'): ?>
-                <a href="<?php echo $dir; ?>pages/admin.php">Administration</a>
-                <a href="<?php echo $dir; ?>pages/catalog.php">Catalogue</a>
-            <?php endif; ?>
-            
-            <a href="<?php echo $dir; ?>api/auth.php?action=logout" style="color: var(--junia-orange);">Déconnexion</a>
+        <?php if (isset($simpleHeader) && $simpleHeader === true): ?>
+            <a href="<?php echo $dir; ?>index.php">Retour à l'accueil</a>
         <?php else: ?>
-            <a href="<?php echo $dir; ?>pages/login.php">Connexion</a>
+            <a class="<?php echo $currentModule === 'index.php' ? 'is-active' : ''; ?>" href="<?php echo $dir; ?>index.php">Accueil</a>
+            
+            <?php if (isset($_SESSION['user'])): ?>
+                <?php if ($_SESSION['user']['role'] === 'student'): ?>
+                    <a class="<?php echo $currentModule === 'profile.php' ? 'is-active' : ''; ?>" href="<?php echo $dir; ?>pages/profile.php">Mon profil</a>
+                    <a class="<?php echo $currentModule === 'catalog.php' ? 'is-active' : ''; ?>" href="<?php echo $dir; ?>pages/catalog.php">Catalogue</a>
+                <?php elseif ($_SESSION['user']['role'] === 'company'): ?>
+                    <a class="<?php echo $currentModule === 'catalog.php' ? 'is-active' : ''; ?>" href="<?php echo $dir; ?>pages/catalog.php">Catalogue</a>
+                <?php elseif ($_SESSION['user']['role'] === 'admin'): ?>
+                    <a class="<?php echo $currentModule === 'admin.php' ? 'is-active' : ''; ?>" href="<?php echo $dir; ?>pages/admin.php">Administration</a>
+                    <a class="<?php echo $currentModule === 'catalog.php' ? 'is-active' : ''; ?>" href="<?php echo $dir; ?>pages/catalog.php">Catalogue</a>
+                <?php endif; ?>
+                
+                <a href="<?php echo $dir; ?>api/auth.php?action=logout">Déconnexion</a>
+            <?php else: ?>
+                <a class="<?php echo $currentModule === 'login.php' ? 'is-active' : ''; ?>" href="<?php echo $dir; ?>pages/login.php">Connexion</a>
+            <?php endif; ?>
         <?php endif; ?>
     </nav>
 </header>

@@ -84,8 +84,8 @@ try {
     ]);
 
     // Succès : on renvoie l'utilisateur vers la page de connexion
-    sendJsonResponse(true, 'Compte créé avec succès ! Tu peux maintenant te connecter.', [
-        'redirect' => 'connexion.php?message=Compte+créé+avec+succès.+Connecte-toi!&type=success'
+   sendJsonResponse(true, 'Compte créé avec succès ! Tu peux maintenant te connecter.', [
+        'redirect' => 'login.php?message=Compte+créé+avec+succès.+Connecte-toi!&type=success'
     ]);
 
 } catch (Exception $exception) {

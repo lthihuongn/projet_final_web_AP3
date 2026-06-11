@@ -23,7 +23,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['action']) && $_GET['act
     }
 
     // Redirection vers la page de connexion avec un message de confirmation
-    header('Location: ../pages/connexion.php?message=Vous+avez+été+déconnecté+avec+succès.&type=success');
+    header('Location: ../pages/login.php?message=Vous+avez+été+déconnecté+avec+succès.&type=success');
     exit;
 }
 
@@ -149,9 +149,9 @@ if ($remember) {
 // Redirection dynamique de secours selon le privilège
 $redirectUrl = '../index.php';
 if ($userRole === 'student') {
-    $redirectUrl = 'profil.php';
+    $redirectUrl = 'profile.php';
 } elseif ($userRole === 'company') {
-    $redirectUrl = 'catalogue.php';
+    $redirectUrl = 'catalog.php';
 }
 
 sendJsonResponse(true, 'Connexion réussie.', [

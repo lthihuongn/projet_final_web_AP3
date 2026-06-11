@@ -1,14 +1,11 @@
 <?php
-// On définit le dossier racine relatif (laisser vide si à la racine, ou './')
+// Définition du dossier racine relatif (laissé vide car à la racine)
 $dir = ''; 
 
-// 1. Connexion à la base de données (si besoin)
-// require_once $dir . 'inc/db.php';
-
-// 2. Inclusion du header global (qui gère le session_start() et la navbar)
+// Inclusion du header global (qui gère le démarrage de la session et la topbar)
 require_once 'inc/header.php';
 
-// Récupération des variables de session nettoyées (le header a déjà démarré la session)
+// Récupération et nettoyage des variables de session applicatives
 $isLoggedIn = isset($_SESSION['user']);
 $userName = '';
 $userRole = '';
@@ -20,10 +17,8 @@ if ($isLoggedIn) {
 }
 ?>
 
-<!-- On utilise une div avec ta classe pour que ton CSS 'css/style.css' continue de fonctionner parfaitement -->
 <div class="catalogue-shell">
     
-    <!-- SECTION HERO -->
     <section class="catalogue-hero">
         <div>
             <p class="eyebrow">Junia CV & Talents</p>
@@ -49,10 +44,8 @@ if ($isLoggedIn) {
         </div>
     </section>
 
-    <!-- SECTION PRINCIPALE / MISE EN PAGE -->
     <section class="catalogue-layout">
         
-        <!-- PANNEAU LATÉRAL (CONNEXION / PROFIL) -->
         <aside class="filters-panel" aria-label="Espace utilisateur">
             <?php if ($isLoggedIn): ?>
                 <h3>Mon Compte</h3>
@@ -64,10 +57,10 @@ if ($isLoggedIn) {
                     <span class="role-pill" style="margin-left: 0;"><?php echo $userRole; ?></span>
                 </div>
                 
-                <a href="pages/profil.php" class="button" style="text-decoration: none; margin-top: 24px;">
+                <a href="pages/profile.php" class="button" style="text-decoration: none; margin-top: 24px;">
                     Mettre à jour mon profil
                 </a>
-                <a href="pages/catalogue.php" class="secondary-button" style="display: block; text-align: center; text-decoration: none;">
+                <a href="pages/catalog.php" class="secondary-button" style="display: block; text-align: center; text-decoration: none;">
                     Explorer le catalogue
                 </a>
             <?php else: ?>
@@ -76,16 +69,15 @@ if ($isLoggedIn) {
                     Connectez-vous pour accéder à l'intégralité des profils étudiants ou pour administrer vos informations de recherche.
                 </p>
                 
-                <a href="pages/connexion.php" class="button" style="text-decoration: none; margin-top: 16px;">
+                <a href="pages/login.php" class="button" style="text-decoration: none; margin-top: 16px;">
                     Se connecter
                 </a>
-                <a href="pages/inscription.php" class="secondary-button" style="display: block; text-align: center; text-decoration: none;">
+                <a href="pages/signup.php" class="secondary-button" style="display: block; text-align: center; text-decoration: none;">
                     Créer un compte
                 </a>
             <?php endif; ?>
         </aside>
 
-        <!-- PANNEAU DES RÉSULTATS / FONCTIONNALITÉS -->
         <section class="results-panel">
             <div class="results-header">
                 <div>
@@ -141,6 +133,6 @@ if ($isLoggedIn) {
 </div>
 
 <?php
-// 3. Inclusion du footer global (qui ferme le main, body et html, et charge Bootstrap JS)
+// Inclusion du footer global (ferme le flux html et charge le layout de pied de page)
 require_once 'inc/footer.php';
 ?>
