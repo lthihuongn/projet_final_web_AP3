@@ -4,7 +4,7 @@
     <div class="container">
         <div class="row align-items-center py-2">
             <div class="col-md-6 text-center text-md-start mb-3 mb-md-0">
-                <p class="mb-0">&copy; <?php echo date('Y'); ?> <strong>Pote Au Feu</strong>. Tous droits réservés.</p>
+                <p class="mb-0">&copy; <?php echo date('Y'); ?> <strong>JUNIA</strong>. Tous droits réservés.</p>
                 <small class="text-muted">Projet de validation — Architecture Web AP3</small>
             </div>
             
@@ -34,6 +34,5 @@
 </style>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
-<script src="<?php echo $dir; ?>js/auth.js"></script>
 </body>
 </html>

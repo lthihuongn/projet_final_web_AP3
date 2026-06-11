@@ -9,7 +9,7 @@
     --accent: #F39200;
     --accent-strong: #F39200;
     --danger: #F39200;
-    --success: #34d399;
+    --success: #17a470;
     --shadow: 0 20px 60px rgba(2, 6, 23, 0.45);
 }
 
@@ -85,7 +85,7 @@ a {
     border-radius: 14px;
     display: grid;
     place-items: center;
-    background: linear-gradient(135deg, var(--accent), #22c55e);
+    background: linear-gradient(135deg, var(--accent), #159b47);
     color: #08111f;
     box-shadow: var(--shadow);
 }
@@ -181,13 +181,13 @@ a {
 
 .alert.error {
     background: rgba(248, 113, 113, 0.14);
-    color: #fecaca;
+    color: #f49595;
     border: 1px solid rgba(248, 113, 113, 0.28);
 }
 
 .alert.success {
     background: rgba(52, 211, 153, 0.14);
-    color: #bbf7d0;
+    color: #74f9a3;
     border: 1px solid rgba(52, 211, 153, 0.28);
 }
 
@@ -356,7 +356,6 @@ a {
         radial-gradient(circle at top, rgba(255, 255, 255, 0.14), transparent 28%),
         radial-gradient(circle at bottom left, rgba(255, 255, 255, 0.08), transparent 24%),
         linear-gradient(135deg, #5f2b86 0%, var(--junia-violet) 48%, #43155f 100%);
-    padding: 28px clamp(16px, 3vw, 32px);
 }
 
 .topbar {
@@ -899,7 +898,6 @@ a {
         radial-gradient(circle at top, rgba(255, 255, 255, 0.14), transparent 28%),
         radial-gradient(circle at bottom right, rgba(255, 255, 255, 0.08), transparent 24%),
         linear-gradient(135deg, #5f2b86 0%, var(--junia-violet) 48%, #43155f 100%);
-    padding: 28px clamp(16px, 3vw, 32px);
 }
 
 .profil-shell {
