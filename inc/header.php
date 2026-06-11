@@ -9,8 +9,11 @@ if (!isset($dir)) {
     $dir = '';
 }
 
-// Détection de la page actuelle pour la classe d'activation
+// Détection du module actuel pour l'attribution de la classe active
 $currentModule = basename($_SERVER['PHP_SELF']);
+
+// Définition de la classe de corps de page dynamique
+$pageGroupClass = $bodyClass ?? '';
 ?>
 <!DOCTYPE html>
 <html lang="fr">
@@ -21,12 +24,12 @@ $currentModule = basename($_SERVER['PHP_SELF']);
     
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&family=Open+Sans:wght@400;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;800&family=Open+Sans:wght@400;600;700&display=swap" rel="stylesheet">
     
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="<?php echo $dir; ?>css/style.css?v=<?php echo time(); ?>">
 </head>
-<body>
+<body class="<?php echo $pageGroupClass; ?>">
 
 <header class="topbar">
     <div class="brand-block">
@@ -61,4 +64,4 @@ $currentModule = basename($_SERVER['PHP_SELF']);
     </nav>
 </header>
 
-<main class="container my-5 flex-grow-1">
+<main class="flex-grow-1" style="margin-top: 20px; margin-bottom: 40px;">
